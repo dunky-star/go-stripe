@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/joho/godotenv"
 )
 
 const (
@@ -52,6 +54,9 @@ func (app *application) serve() error {
 }
 
 func main() {
+	// Load .env file into environment (no-op if file missing)
+	_ = godotenv.Load()
+
 	// Initialize a new instance of the config struct.
 	var cfg config
 
