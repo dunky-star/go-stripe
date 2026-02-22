@@ -140,8 +140,8 @@
                              showCardError(result.error.message);
                              showPayButtons();
 
-                        } else if(result.PaymentIntent) {
-                            if (result.PaymentIntent.status === "succeeded") {
+                        } else if(result.paymentIntent) {
+                            if (result.paymentIntent.status === "succeeded") {
                                 // We have charged the card
                                 document.getElementById("payment_method").value = result.paymentIntent.payment_method_types[0];
                                 document.getElementById("payment_intent").value = result.paymentIntent.id;
