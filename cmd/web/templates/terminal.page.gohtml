@@ -120,7 +120,7 @@
             body: JSON.stringify(payload),
         }
 
-        fetch("http://localhost:4001/api/v1/payment-intent", requestOptions)
+        fetch("{{.API}}/api/v1/payment-intent", requestOptions)
             .then(response => response.text())
             .then(response => {
                 let data;
