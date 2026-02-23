@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/dunky-star/go-stripe/internal/driver"
 	"github.com/joho/godotenv"
 )
 
@@ -63,17 +64,24 @@ func main() {
 	// Read the value of the PORT environment variable into the config struct. If it’s not set, default to 4000.
 	flag.IntVar(&cfg.port, "port", 4000, "API server port to listen on")
 	flag.StringVar(&cfg.env, "env", "dev", "Environment (dev|qa|prod)")
+	flag.StringVar(&cfg.db.dsn, "dsn", os.Getenv("DSN"), "MySQL data source name")
 	flag.StringVar(&cfg.api, "api", "http://localhost:4001", "API server URL")
 	flag.Parse()
 
-	// For security, we should not store our Stripe secret key in the config struct.
-	// Instead, we can read it from an environment variable.
+	// Read sensitive config from environment variables
 	cfg.stripe.secret = os.Getenv("STRIPE_SECRET")
 	cfg.stripe.key = os.Getenv("STRIPE_KEY")
 
 	// Logging setup
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+
+	conn, err := driver.OpenDB(cfg.db.dsn)
+	if err != nil {
+		errorLog.Println(err)
+		log.Fatal(err)
+	}
+	defer conn.Close()
 
 	// Template caching setup
 	tc := make(map[string]*template.Template)
@@ -88,7 +96,7 @@ func main() {
 		version:       version,
 	}
 	// Call the serve() method on our application struct.
-	err := app.serve()
+	err = app.serve()
 	if err != nil {
 		app.errorLog.Printf("Error starting server: %v", err)
 		log.Fatal(err)

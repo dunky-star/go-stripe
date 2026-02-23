@@ -8,5 +8,10 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("POST /payment-succeeded", app.PaymentSucceededHandler)
 	//mux.HandleFunc("GET /v1/healthcheck", app.healthcheckHandler)
 	//mux.HandleFunc("POST /v1/stripe", app.stripeHandler)
+
+	//serving static files
+	fileserver := http.FileServer(http.Dir("./static"))
+	mux.Handle("/static/", http.StripPrefix("/static", fileserver))
+
 	return mux
 }
