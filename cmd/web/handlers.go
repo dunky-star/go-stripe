@@ -11,7 +11,7 @@ func (app *application) VirtualCardHandler(w http.ResponseWriter, r *http.Reques
 	stringMap["stripe_key"] = app.config.stripe.key
 	if err := app.renderTemplate(w, r, "terminal", &templateData{
 		StringMap: stringMap,
-	}); err != nil {
+	}, "stripe-js"); err != nil {
 		app.errorLog.Println(err)
 	}
 }
@@ -46,6 +46,13 @@ func (app *application) PaymentSucceededHandler(w http.ResponseWriter, r *http.R
 	if err := app.renderTemplate(w, r, "payment-succeeded", &templateData{
 		Data: data,
 	}); err != nil {
+		app.errorLog.Println(err)
+	}
+}
+
+// ChargeOnce displays the page to buy one widget
+func (app *application) ChargeOnce(w http.ResponseWriter, r *http.Request) {
+	if err := app.renderTemplate(w, r, "buy-once", nil); err != nil {
 		app.errorLog.Println(err)
 	}
 }
