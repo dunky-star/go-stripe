@@ -1,10 +1,4 @@
--- Drop indexes first
-DROP INDEX IF EXISTS idx_transactions_transaction_status_id ON transactions;
-DROP INDEX IF EXISTS idx_transactions_order_id ON transactions;
-DROP INDEX IF EXISTS idx_orders_transaction_status_id ON orders;
-DROP INDEX IF EXISTS idx_orders_widget_id ON orders;
-
--- Drop tables in reverse order (respect foreign key constraints)
+-- Drop tables in reverse order (foreign keys are dropped automatically with tables)
 DROP TABLE IF EXISTS transactions;
 DROP TABLE IF EXISTS orders;
 DROP TABLE IF EXISTS customers;

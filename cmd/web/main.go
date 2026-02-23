@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/dunky-star/go-stripe/internal/driver"
+	"github.com/dunky-star/go-stripe/internal/models"
 	"github.com/joho/godotenv"
 )
 
@@ -37,6 +38,7 @@ type application struct {
 	errorLog      *log.Logger
 	templateCache map[string]*template.Template
 	version       string
+	DB            models.DBModel
 }
 
 func (app *application) serve() error {
@@ -94,6 +96,7 @@ func main() {
 		errorLog:      errorLog,
 		templateCache: tc,
 		version:       version,
+		DB:            models.DBModel{DB: conn},
 	}
 	// Call the serve() method on our application struct.
 	err = app.serve()

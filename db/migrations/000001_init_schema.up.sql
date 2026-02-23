@@ -82,4 +82,4 @@ INSERT INTO transaction_statuses (name) VALUES
 
 -- Seed a sample widget
 INSERT INTO widgets (name, description, image, inventory_level, price) VALUES 
-    ('Widget', 'A very nice widget', '/static/widget.png', 10, 1000);
+    ('Widget', 'A very nice widget to buy once', '/static/widget.png', 10, 1000);
