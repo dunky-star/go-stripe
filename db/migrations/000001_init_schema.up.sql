@@ -19,16 +19,27 @@ CREATE TABLE IF NOT EXISTS transaction_statuses (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS customers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    first_name VARCHAR(255) NOT NULL,
+    last_name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS orders (
     id INT AUTO_INCREMENT PRIMARY KEY,
     widget_id INT NOT NULL,
+    customer_id INT NOT NULL,
     transaction_status_id INT NOT NULL,
     quantity INT NOT NULL,
     amount INT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (widget_id) REFERENCES widgets(id) ON DELETE CASCADE,
-    FOREIGN KEY (transaction_status_id) REFERENCES transaction_statuses(id) ON DELETE CASCADE
+    FOREIGN KEY (transaction_status_id) REFERENCES transaction_statuses(id) ON DELETE CASCADE,
+    FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS transactions (
@@ -57,18 +68,10 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS customers (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    first_name VARCHAR(255) NOT NULL,
-    last_name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
 -- Indexes for better query performance
 CREATE INDEX idx_orders_widget_id ON orders(widget_id);
 CREATE INDEX idx_orders_transaction_status_id ON orders(transaction_status_id);
+CREATE INDEX idx_orders_customer_id ON orders(customer_id);
 CREATE INDEX idx_transactions_order_id ON transactions(order_id);
 CREATE INDEX idx_transactions_transaction_status_id ON transactions(transaction_status_id);
 
