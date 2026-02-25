@@ -15,5 +15,5 @@ func (app *application) routes() http.Handler {
 	fileserver := http.FileServer(http.Dir("./static"))
 	mux.Handle("GET /static/", http.StripPrefix("/static", fileserver))
 
-	return mux
+	return SessionLoad(mux)
 }

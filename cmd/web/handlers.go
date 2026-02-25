@@ -61,6 +61,12 @@ func (app *application) PaymentSucceededHandler(w http.ResponseWriter, r *http.R
 	expiryMonth := pm.Card.ExpMonth
 	expiryYear := pm.Card.ExpYear
 
+	// Create a new customer
+
+	// Create a new order
+
+	// Create a new transaction
+
 	data := make(map[string]interface{})
 	data["cardholder"] = cardHolder
 	data["cardholder_email"] = cardholderEmail
@@ -72,6 +78,8 @@ func (app *application) PaymentSucceededHandler(w http.ResponseWriter, r *http.R
 	data["expiry_month"] = expiryMonth
 	data["expiry_year"] = expiryYear
 	data["bank_return_code"] = pi.Charges.Data[0].ID
+
+	// Should write this data to session, and then redirect user to a new page
 
 	if err := app.renderTemplate(w, r, "payment-succeeded", &templateData{
 		Data: data,

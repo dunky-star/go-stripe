@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/alexedwards/scs/v2"
 	"github.com/dunky-star/go-stripe/internal/driver"
 	"github.com/dunky-star/go-stripe/internal/models"
 	"github.com/joho/godotenv"
@@ -18,6 +19,8 @@ const (
 	version    = "1.0.0"
 	cssVersion = "1"
 )
+
+var session *scs.SessionManager
 
 type config struct {
 	port int
@@ -39,6 +42,7 @@ type application struct {
 	templateCache map[string]*template.Template
 	version       string
 	DB            models.DBModel
+	Session       *scs.SessionManager
 }
 
 func (app *application) serve() error {
@@ -85,6 +89,10 @@ func main() {
 	}
 	defer conn.Close()
 
+	// Initialize a new session manager
+	session = scs.New()
+	session.Lifetime = 24 * time.Hour
+
 	// Template caching setup
 	tc := make(map[string]*template.Template)
 
@@ -97,6 +105,7 @@ func main() {
 		templateCache: tc,
 		version:       version,
 		DB:            models.DBModel{DB: conn},
+		Session:       session,
 	}
 	// Call the serve() method on our application struct.
 	err = app.serve()

@@ -136,7 +136,7 @@ func (m *DBModel) InsertTransaction(txn Transaction) (int, error) {
 
 	stmt := `
 		INSERT INTO transactions
-			(amount, currency, last_four, bank_return_code,
+			(amount, currency, last_four, expiry_month, expiry_year, bank_return_code,
 			transaction_status_id, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?)
 	`
@@ -183,6 +183,35 @@ func (m *DBModel) InsertOrder(order Order) (int, error) {
 		order.StatusID,
 		order.Quantity,
 		order.Amount,
+		time.Now(),
+		time.Now(),
+	)
+	if err != nil {
+		return 0, err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+
+	return int(id), nil
+}
+
+// InsertCustomer inserts a new customer, and returns its id
+func (m *DBModel) InsertCustomer(customer Customer) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	stmt := `
+		INSERT INTO customers
+		(first_name, last_name, email, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?)
+		`
+	result, err := m.DB.ExecContext(ctx, stmt,
+		customer.FirstName,
+		customer.LastName,
+		customer.Email,
 		time.Now(),
 		time.Now(),
 	)
