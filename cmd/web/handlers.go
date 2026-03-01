@@ -84,6 +84,8 @@ func (app *application) PaymentSucceededHandler(w http.ResponseWriter, r *http.R
 		ExpiryMonth:         int(expiryMonth),
 		ExpiryYear:          int(expiryYear),
 		BankReturnCode:      pi.Charges.Data[0].ID,
+		PaymentIntent:       paymentIntent,
+		PaymentMethod:       paymentMethod,
 		TransactionStatusID: 2,
 	}
 
@@ -124,6 +126,8 @@ func (app *application) PaymentSucceededHandler(w http.ResponseWriter, r *http.R
 	data["expiry_month"] = expiryMonth
 	data["expiry_year"] = expiryYear
 	data["bank_return_code"] = pi.Charges.Data[0].ID
+	data["first_name"] = firstname
+	data["last_name"] = lastname
 
 	// Should write this data to session, and then redirect user to a new page
 

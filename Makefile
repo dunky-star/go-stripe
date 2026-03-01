@@ -1,4 +1,4 @@
-.PHONY: help migrateup migratedown
+.PHONY: help migrateup migratedown migrateforce
 
 help: ## Show available commands
 	@echo "Available targets:"
@@ -14,3 +14,9 @@ migratedown: ## Run database migrations down (loads .env if present)
 	@[ -f .env ] && set -a && . ./.env && set +a; \
 	if [ -z "$$DSN" ]; then echo "Error: set DSN in .env"; exit 1; fi; \
 	migrate -path db/migrations -database "mysql://$$DSN" -verbose down
+
+migrateforce: VERSION ?= 1
+migrateforce: ## Fix dirty DB: make migrateforce [VERSION=1] (clears dirty; use 1 if schema exists)
+	@[ -f .env ] && set -a && . ./.env && set +a; \
+	if [ -z "$$DSN" ]; then echo "Error: set DSN in .env"; exit 1; fi; \
+	migrate -path db/migrations -database "mysql://$$DSN" force $(VERSION)

@@ -28,33 +28,35 @@ CREATE TABLE IF NOT EXISTS customers (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS transactions (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    transaction_status_id INT NOT NULL,
+    amount INT NOT NULL,
+    currency VARCHAR(10) NOT NULL,
+    last_four VARCHAR(4) NOT NULL,
+    expiry_month INT NOT NULL,
+    expiry_year INT NOT NULL,
+    bank_return_code VARCHAR(255) NOT NULL,
+    payment_intent VARCHAR(255) NOT NULL,
+    payment_method VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (transaction_status_id) REFERENCES transaction_statuses(id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS orders (
     id INT AUTO_INCREMENT PRIMARY KEY,
     widget_id INT NOT NULL,
     customer_id INT NOT NULL,
+    transaction_id INT NOT NULL,
     transaction_status_id INT NOT NULL,
     quantity INT NOT NULL,
     amount INT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (widget_id) REFERENCES widgets(id) ON DELETE CASCADE,
-    FOREIGN KEY (transaction_status_id) REFERENCES transaction_statuses(id) ON DELETE CASCADE,
-    FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
-);
-
-CREATE TABLE IF NOT EXISTS transactions (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    order_id INT NOT NULL,
-    transaction_status_id INT NOT NULL,
-    amount INT NOT NULL,
-    currency VARCHAR(10) NOT NULL,
-    last_four VARCHAR(4) NOT NULL,
-    bank_return_code VARCHAR(255) NOT NULL,
-    payment_intent VARCHAR(255) NOT NULL,
-    payment_method VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
+    FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
+    FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE CASCADE,
     FOREIGN KEY (transaction_status_id) REFERENCES transaction_statuses(id) ON DELETE CASCADE
 );
 
@@ -70,9 +72,9 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- Indexes for better query performance
 CREATE INDEX idx_orders_widget_id ON orders(widget_id);
-CREATE INDEX idx_orders_transaction_status_id ON orders(transaction_status_id);
 CREATE INDEX idx_orders_customer_id ON orders(customer_id);
-CREATE INDEX idx_transactions_order_id ON transactions(order_id);
+CREATE INDEX idx_orders_transaction_id ON orders(transaction_id);
+CREATE INDEX idx_orders_transaction_status_id ON orders(transaction_status_id);
 CREATE INDEX idx_transactions_transaction_status_id ON transactions(transaction_status_id);
 
 -- Seed transaction statuses
