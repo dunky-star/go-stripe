@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/dunky-star/go-stripe/internal/cards"
+	"github.com/dunky-star/go-stripe/internal/models"
 )
 
 func (app *application) HomeHandler(w http.ResponseWriter, r *http.Request) {
@@ -28,12 +30,15 @@ func (app *application) PaymentSucceededHandler(w http.ResponseWriter, r *http.R
 	}
 
 	// Read the posted data
+	firstname := r.Form.Get("first_name")
+	lastname := r.Form.Get("last_name")
 	paymentAmountStr := r.Form.Get("payment_amount")
 	paymentCurrency := r.Form.Get("payment_currency")
 	paymentIntent := r.Form.Get("payment_intent")
 	paymentMethod := r.Form.Get("payment_method")
 	cardHolder := r.Form.Get("cardholder_name")
 	cardholderEmail := r.Form.Get("cardholder_email")
+	widgetID, _ := strconv.Atoi(r.Form.Get("product_id"))
 
 	// Convert cents to dollars
 	paymentAmountCents, _ := strconv.Atoi(paymentAmountStr)
@@ -62,10 +67,51 @@ func (app *application) PaymentSucceededHandler(w http.ResponseWriter, r *http.R
 	expiryYear := pm.Card.ExpYear
 
 	// Create a new customer
+	customerID, err := app.SaveCustomer(firstname, lastname, cardholderEmail)
+	if err != nil {
+		app.errorLog.Println(err)
+		return
+	}
 
-	// Create a new order
+	app.infoLog.Println(customerID)
 
 	// Create a new transaction
+	amount, _ := strconv.Atoi(paymentAmount)
+	txn := models.Transaction{
+		Amount:              amount,
+		Currency:            paymentCurrency,
+		LastFour:            lastFour,
+		ExpiryMonth:         int(expiryMonth),
+		ExpiryYear:          int(expiryYear),
+		BankReturnCode:      pi.Charges.Data[0].ID,
+		TransactionStatusID: 2,
+	}
+
+	txnID, err := app.SaveTransaction(txn)
+	if err != nil {
+		app.errorLog.Println(err)
+		return
+	}
+	app.infoLog.Println(txnID)
+
+	// Create a new order
+	order := models.Order{
+		WidgetID:      widgetID,
+		TransactionID: txnID,
+		CustomerID:    customerID,
+		StatusID:      1,
+		Quantity:      1,
+		Amount:        amount,
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
+	}
+
+	orderID, err := app.SaveOrder(order)
+	if err != nil {
+		app.errorLog.Println(err)
+		return
+	}
+	app.infoLog.Println(orderID)
 
 	data := make(map[string]interface{})
 	data["cardholder"] = cardHolder
@@ -86,6 +132,45 @@ func (app *application) PaymentSucceededHandler(w http.ResponseWriter, r *http.R
 	}); err != nil {
 		app.errorLog.Println(err)
 	}
+}
+
+// SaveCustomer saves a new customer to the database and returns the ID
+func (app *application) SaveCustomer(firstname, lastname, email string) (int, error) {
+
+	customer := models.Customer{
+		FirstName: firstname,
+		LastName:  lastname,
+		Email:     email,
+	}
+
+	id, err := app.DB.InsertCustomer(customer)
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
+}
+
+// SaveTransaction saves a new transaction to the database and returns the ID
+func (app *application) SaveTransaction(txn models.Transaction) (int, error) {
+
+	id, err := app.DB.InsertTransaction(txn)
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
+}
+
+// SaveOrder saves a new order to the database and returns the ID
+func (app *application) SaveOrder(order models.Order) (int, error) {
+
+	id, err := app.DB.InsertOrder(order)
+	if err != nil {
+		return 0, err
+	}
+
+	return id, nil
 }
 
 // ChargeOnce displays the page to buy one widget

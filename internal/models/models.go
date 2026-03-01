@@ -38,7 +38,7 @@ type Widget struct {
 // Order is the type for all orders
 type Order struct {
 	ID            int       `json:"id"`
-	WidgetId      int       `json:"widget_id"`
+	WidgetID      int       `json:"widget_id"`
 	TransactionID int       `json:"transaction_id"`
 	CustomerID    int       `json:"customer_id"`
 	StatusID      int       `json:"status_id"`
@@ -70,6 +70,8 @@ type Transaction struct {
 	Amount              int       `json:"amount"`
 	Currency            string    `json:"currency"`
 	LastFour            string    `json:"last_four"`
+	ExpiryMonth         int       `json:"expiry_month"`
+	ExpiryYear          int       `json:"expiry_year"`
 	BankReturnCode      string    `json:"bank_return_code"`
 	TransactionStatusID int       `json:"transaction_status_id"`
 	CreatedAt           time.Time `json:"-"`
@@ -144,6 +146,8 @@ func (m *DBModel) InsertTransaction(txn Transaction) (int, error) {
 		txn.Amount,
 		txn.Currency,
 		txn.LastFour,
+		txn.ExpiryMonth,
+		txn.ExpiryYear,
 		txn.BankReturnCode,
 		txn.TransactionStatusID,
 		time.Now(),
@@ -168,18 +172,12 @@ func (m *DBModel) InsertOrder(order Order) (int, error) {
 
 	stmt := `
 		INSERT INTO orders 
-		  (widget_id, 
-		  transaction_id, 
-		  status_id,
-		  quantity, 
-		  amount, 
-		  created_at, 
-		  updated_at)
-		VALUES (?, ?, ?, ?, ?, ?)
+		  (widget_id, customer_id, transaction_status_id, quantity, amount, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?)
 	`
 	result, err := m.DB.ExecContext(ctx, stmt,
-		order.WidgetId,
-		order.TransactionID,
+		order.WidgetID,
+		order.CustomerID,
 		order.StatusID,
 		order.Quantity,
 		order.Amount,
