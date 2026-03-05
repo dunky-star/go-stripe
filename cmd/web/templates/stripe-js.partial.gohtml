@@ -45,12 +45,15 @@
         form.classList.add("was-validated");
         hidePayButton();
 
-        let amountToCharge = document.getElementById("amount").value
-        
+        let amountEl = document.getElementById("charge_amount");
+        let amountToCharge = amountEl && amountEl.value
+            ? Math.round(parseFloat(amountEl.value) * 100)
+            : (document.getElementById("payment_amount").value || 0);
+
         let payload = {
-            amount: amountToCharge,
+            amount: String(amountToCharge),
             currency: 'usd',
-        }
+        };
 
         const requestOptions = {
             method: 'post',
