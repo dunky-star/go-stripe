@@ -62,7 +62,7 @@ func (app *application) serve() error {
 }
 
 func main() {
-	gob.Register(map[string]interface{}{})
+	gob.Register(transactionData{})
 	// Load .env file into environment (no-op if file missing)
 	_ = godotenv.Load()
 

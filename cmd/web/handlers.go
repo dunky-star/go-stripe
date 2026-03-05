@@ -162,28 +162,16 @@ func (app *application) PaymentSucceededHandler(w http.ResponseWriter, r *http.R
 	}
 	app.infoLog.Println(orderID)
 
-	data := make(map[string]interface{})
-	data["cardholder"] = txnData.FirstName + " " + txnData.LastName
-	data["cardholder_email"] = txnData.Email
-	data["payment_amount"] = txnData.PaymentAmount
-	data["payment_currency"] = txnData.PaymentCurrency
-	data["payment_intent"] = txnData.PaymentIntentID
-	data["payment_method"] = txnData.PaymentMethodID
-	data["last_four"] = txnData.LastFour
-	data["expiry_month"] = txnData.ExpiryMonth
-	data["expiry_year"] = txnData.ExpiryYear
-	data["bank_return_code"] = txnData.BankReturnCode
-	data["first_name"] = txnData.FirstName
-	data["last_name"] = txnData.LastName
-
-	// Should write this data to session, and then redirect user to a new page
-	app.Session.Put(r.Context(), "receipt", data)
+	// Write this data to session, and then redirect user to a new page
+	app.Session.Put(r.Context(), "receipt", txnData)
 
 	http.Redirect(w, r, "/v1/receipt", http.StatusSeeOther)
 }
 
 func (app *application) ReceiptHandler(w http.ResponseWriter, r *http.Request) {
-	data := app.Session.Get(r.Context(), "receipt").(map[string]interface{})
+	txn := app.Session.Get(r.Context(), "receipt").(transactionData)
+	data := make(map[string]interface{})
+	data["txn"] = txn
 	app.Session.Remove(r.Context(), "receipt")
 	if err := app.renderTemplate(w, r, "receipt", &templateData{
 		Data: data,
