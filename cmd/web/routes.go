@@ -12,6 +12,7 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("GET /v1/receipt", app.ReceiptHandler)
 	//mux.HandleFunc("GET /v1/healthcheck", app.healthcheckHandler)
 	//mux.HandleFunc("POST /v1/stripe", app.stripeHandler)
+	mux.HandleFunc("GET /plans/bronze", app.BronzePlanHandler)
 
 	// Serving static files (GET only to avoid conflict with "GET /" in Go 1.22+ ServeMux)
 	fileserver := http.FileServer(http.Dir("./static"))
