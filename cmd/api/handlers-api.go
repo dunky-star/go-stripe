@@ -9,8 +9,12 @@ import (
 )
 
 type stripePayload struct {
-	Currency string `json:"currency"`
-	Amount   string `json:"amount"`
+	Currency      string `json:"currency"`
+	Amount        string `json:"amount"`
+	PaymentMethod string `json:"payment_method"`
+	Email         string `json:"email"`
+	LastFour      string `json:"last_four"`
+	Plan          string `json:"plan"`
 }
 
 type jsonResponse struct {
@@ -68,13 +72,12 @@ func (app *application) GetPaymentIntent(w http.ResponseWriter, r *http.Request)
 			Content: "",
 		}
 
-		out, err := json.MarshalIndent(j, "", "   ")
-		if err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		enc := json.NewEncoder(w)
+		enc.SetIndent("", "   ")
+		if err := enc.Encode(j); err != nil {
 			app.errorLog.Println(err)
 		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(out)
 	}
 }
 
@@ -89,12 +92,36 @@ func (app *application) GetWidgetByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out, err := json.MarshalIndent(widget, "", "   ")
+	w.Header().Set("Content-Type", "application/json")
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "   ")
+	if err := enc.Encode(widget); err != nil {
+		app.errorLog.Println(err)
+	}
+}
+
+func (app *application) CreateCustomerAndSubscribeToPlan(w http.ResponseWriter, r *http.Request) {
+	var data stripePayload
+
+	err := json.NewDecoder(r.Body).Decode(&data)
 	if err != nil {
 		app.errorLog.Println(err)
 		return
 	}
+	app.infoLog.Println(data.Email, data.LastFour, data.PaymentMethod, data.Plan)
+
+	okay := true
+	msg := ""
+
+	resp := jsonResponse{
+		OK:      okay,
+		Message: msg,
+	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(out)
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	if err := enc.Encode(resp); err != nil {
+		app.errorLog.Println(err)
+	}
 }
