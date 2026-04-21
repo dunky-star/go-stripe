@@ -138,3 +138,36 @@ func cardErrorMessage(code stripe.ErrorCode) string {
 	}
 	return msg
 }
+
+// SafeClientMessage returns text safe to show in the browser. Always log the full err on the server.
+func SafeClientMessage(err error) string {
+	if err == nil {
+		return ""
+	}
+	se, ok := err.(*stripe.Error)
+	if !ok {
+		return "We couldn’t complete your request. Please try again."
+	}
+	// Never expose raw Msg (can include API key fragments, request IDs).
+	switch se.HTTPStatusCode {
+	case 401, 403:
+		return "Payment could not be verified. Please try again later."
+	}
+	switch se.Code {
+	case stripe.ErrorCodeResourceMissing:
+		return "That plan or product is not available."
+	case stripe.ErrorCodeCardDeclined,
+		stripe.ErrorCodeExpiredCard,
+		stripe.ErrorCodeIncorrectCVC,
+		stripe.ErrorCodeIncorrectZip,
+		stripe.ErrorCodeAmountTooLarge,
+		stripe.ErrorCodeAmountTooSmall,
+		stripe.ErrorCodeBalanceInsufficient,
+		stripe.ErrorCodePostalCodeInvalid:
+		return cardErrorMessage(se.Code)
+	}
+	if se.Type == stripe.ErrorTypeCard {
+		return cardErrorMessage(se.Code)
+	}
+	return "We couldn’t complete payment. Please try again or use a different card."
+}

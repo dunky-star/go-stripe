@@ -106,6 +106,12 @@ func (app *application) CreateCustomerAndSubscribeToPlan(w http.ResponseWriter, 
 	err := json.NewDecoder(r.Body).Decode(&data)
 	if err != nil {
 		app.errorLog.Println(err)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(jsonResponse{
+			OK:      false,
+			Message: "invalid request payload",
+		})
 		return
 	}
 	app.infoLog.Println(data.Email, data.LastFour, data.PaymentMethod, data.Plan)
@@ -119,12 +125,24 @@ func (app *application) CreateCustomerAndSubscribeToPlan(w http.ResponseWriter, 
 	stripeCustomer, msg, err := card.CreateCustomer(data.PaymentMethod, data.Email)
 	if err != nil {
 		app.errorLog.Println(err)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(jsonResponse{
+			OK:      false,
+			Message: cards.SafeClientMessage(err),
+		})
 		return
 	}
 
 	subscriptionID, err := card.SubscribeToPlan(stripeCustomer, data.Plan, data.Email, data.LastFour, "")
 	if err != nil {
 		app.errorLog.Println(err)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode(jsonResponse{
+			OK:      false,
+			Message: cards.SafeClientMessage(err),
+		})
 		return
 	}
 

@@ -151,13 +151,27 @@
             }
 
             fetch("{{.API}}/api/v1/create-customer-and-subscribe-to-plan", requestOptions)
-            .then(response => response.json())
+            .then(async (response) => {
+                const text = await response.text();
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    throw new Error("Invalid API response");
+                }
+            })
             .then(function(data) {
+                if (!data.ok) {
+                    throw new Error(data.message || "Subscription failed");
+                }
                 console.log(data);
                 processing.classList.add("d-none");
                 // set hidden vars
                 // submit the form
             })
+            .catch(function(err) {
+                showCardError(err.message);
+                showPayButtons();
+            });
         }
     }
 
