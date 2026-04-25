@@ -80,15 +80,22 @@
     const cardMessages = document.getElementById("card-messages");
     const payButton = document.getElementById("pay-button");
     const processing = document.getElementById("processing-payment");
+    let isSubmitting = false;
+    let isSubscribed = false;
 
     stripe = Stripe('{{.StripeKey}}');
 
     function hidePayButton() {
+        payButton.setAttribute("aria-disabled", "true");
         payButton.classList.add("d-none");
         processing.classList.remove("d-none");
     }
 
     function showPayButtons() {
+        if (isSubscribed) {
+            return;
+        }
+        payButton.setAttribute("aria-disabled", "false");
         payButton.classList.remove("d-none");
         processing.classList.add("d-none");
     }
@@ -108,6 +115,9 @@
     }
 
      function val() {
+        if (isSubmitting || isSubscribed) {
+            return;
+        }
         let form = document.getElementById("charge_form");
         if (form.checkValidity() === false) {
             this.event.preventDefault();
@@ -115,6 +125,7 @@
             form.classList.add("was-validated");
             return;
         }
+        isSubmitting = true;
         form.classList.add("was-validated");
         hidePayButton();
 
@@ -132,6 +143,8 @@
    function stripePaymentMethodHandler(result) {
         if (result.error) {
             showCardError(result.error.message);
+            isSubmitting = false;
+            showPayButtons();
         } else {
             // create a customer and subscribe to plan
             let payload = {
@@ -164,11 +177,14 @@
                     throw new Error(data.message || "Subscription failed");
                 }
                 console.log(data);
+                isSubmitting = false;
+                isSubscribed = true;
                 processing.classList.add("d-none");
-                // set hidden vars
-                // submit the form
+                showCardSuccess();
+                payButton.classList.add("d-none");
             })
             .catch(function(err) {
+                isSubmitting = false;
                 showCardError(err.message);
                 showPayButtons();
             });

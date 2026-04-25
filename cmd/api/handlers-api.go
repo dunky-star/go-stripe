@@ -125,11 +125,15 @@ func (app *application) CreateCustomerAndSubscribeToPlan(w http.ResponseWriter, 
 	stripeCustomer, msg, err := card.CreateCustomer(data.PaymentMethod, data.Email)
 	if err != nil {
 		app.errorLog.Println(err)
+		clientMsg := msg
+		if clientMsg == "" {
+			clientMsg = cards.SafeClientMessage(err)
+		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		_ = json.NewEncoder(w).Encode(jsonResponse{
 			OK:      false,
-			Message: cards.SafeClientMessage(err),
+			Message: clientMsg,
 		})
 		return
 	}

@@ -1,6 +1,8 @@
 package cards
 
 import (
+	"strings"
+
 	"github.com/stripe/stripe-go/v72"
 	"github.com/stripe/stripe-go/v72/customer"
 	"github.com/stripe/stripe-go/v72/paymentintent"
@@ -147,6 +149,9 @@ func SafeClientMessage(err error) string {
 	se, ok := err.(*stripe.Error)
 	if !ok {
 		return "We couldn’t complete your request. Please try again."
+	}
+	if strings.Contains(strings.ToLower(se.Msg), "already been attached to a customer") {
+		return "This card is already linked to a customer. If you already subscribed, refresh and check your account."
 	}
 	// Never expose raw Msg (can include API key fragments, request IDs).
 	switch se.HTTPStatusCode {
