@@ -1,6 +1,7 @@
 package cards
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/stripe/stripe-go/v72"
@@ -73,7 +74,7 @@ func (c *Card) RetrievePaymentIntent(paymentIntentID string) (*stripe.PaymentInt
 }
 
 // SubscribeToPlan subscribes a stripe customer to a stripe plan
-func (c *Card) SubscribeToPlan(cust *stripe.Customer, plan, email, last4, cardType string) (string, error) {
+func (c *Card) SubscribeToPlan(cust *stripe.Customer, plan, email, last4, cardType, idempotencyKey string) (string, error) {
 	stripeCustomerID := cust.ID
 	items := []*stripe.SubscriptionItemsParams{
 		{Plan: stripe.String(plan)},
@@ -87,11 +88,32 @@ func (c *Card) SubscribeToPlan(cust *stripe.Customer, plan, email, last4, cardTy
 	params.AddMetadata("last_four", last4)
 	params.AddMetadata("card_type", cardType)
 	params.AddExpand("latest_invoice.payment_intent")
+	if idempotencyKey != "" {
+		params.Params.IdempotencyKey = stripe.String(idempotencyKey)
+	}
 	subscription, err := sub.New(params)
 	if err != nil {
 		return "", err
 	}
 	return subscription.ID, nil
+}
+
+// EnsureCustomerAndSubscribe creates/reuses customer and subscribes idempotently.
+func (c *Card) EnsureCustomerAndSubscribe(pm, email, plan, last4, cardType string) (string, error) {
+	cust, _, err := c.CreateCustomer(pm, email)
+	if err != nil {
+		if !isPaymentMethodAlreadyAttached(err) {
+			return "", err
+		}
+		// PM already attached: recover by reusing existing customer by email.
+		cust, err = c.findCustomerByEmail(email)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	idempotencyKey := fmt.Sprintf("sub:%s:%s:%s", email, plan, pm)
+	return c.SubscribeToPlan(cust, plan, email, last4, cardType, idempotencyKey)
 }
 
 // CreateCustomer creates a stripe customer
@@ -175,4 +197,28 @@ func SafeClientMessage(err error) string {
 		return cardErrorMessage(se.Code)
 	}
 	return "We couldn’t complete payment. Please try again or use a different card."
+}
+
+func isPaymentMethodAlreadyAttached(err error) bool {
+	se, ok := err.(*stripe.Error)
+	if !ok {
+		return false
+	}
+	return strings.Contains(strings.ToLower(se.Msg), "already been attached to a customer")
+}
+
+func (c *Card) findCustomerByEmail(email string) (*stripe.Customer, error) {
+	stripe.Key = c.Secret
+
+	params := &stripe.CustomerListParams{
+		Email: stripe.String(email),
+	}
+	iter := customer.List(params)
+	for iter.Next() {
+		return iter.Customer(), nil
+	}
+	if iter.Err() != nil {
+		return nil, iter.Err()
+	}
+	return nil, fmt.Errorf("no customer found for email %s", email)
 }
