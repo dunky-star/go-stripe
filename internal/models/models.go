@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 )
 
@@ -233,4 +234,58 @@ func (m *DBModel) InsertCustomer(customer Customer) (int, error) {
 	}
 
 	return int(id), nil
+}
+
+// GetCustomerIDByEmail returns customer id for an existing email.
+func (m *DBModel) GetCustomerIDByEmail(email string) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var id int
+	row := m.DB.QueryRowContext(ctx, `SELECT id FROM customers WHERE email = ?`, email)
+	if err := row.Scan(&id); err != nil {
+		return 0, err
+	}
+	return id, nil
+}
+
+// GetTransactionIDByPaymentRefs returns transaction id for payment_method + payment_intent.
+func (m *DBModel) GetTransactionIDByPaymentRefs(paymentMethod, paymentIntent string) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var id int
+	row := m.DB.QueryRowContext(ctx, `
+		SELECT id
+		FROM transactions
+		WHERE payment_method = ? AND payment_intent = ?
+		LIMIT 1
+	`, paymentMethod, paymentIntent)
+	if err := row.Scan(&id); err != nil {
+		return 0, err
+	}
+	return id, nil
+}
+
+// GetOrderIDByTransactionID returns order id for an existing transaction.
+func (m *DBModel) GetOrderIDByTransactionID(transactionID int) (int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var id int
+	row := m.DB.QueryRowContext(ctx, `
+		SELECT id
+		FROM orders
+		WHERE transaction_id = ?
+		LIMIT 1
+	`, transactionID)
+	if err := row.Scan(&id); err != nil {
+		return 0, err
+	}
+	return id, nil
+}
+
+// IsNotFound reports whether a DB query returned no rows.
+func IsNotFound(err error) bool {
+	return errors.Is(err, sql.ErrNoRows)
 }
