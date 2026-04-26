@@ -19,7 +19,6 @@
     <input type="hidden" name="product_id" id="product_id" value="{{$widget.ID}}">
     <input type="hidden" name="amount" id="amount" value="{{$widget.Price}}">
 
-    <h3 class="mt-2 text-center mb-3">{{$widget.Name}}: {{formatCurrency $widget.Price}}</h3>
     <p>{{$widget.Description}}</p>
     <hr>
 
@@ -188,6 +187,11 @@
                 processing.classList.add("d-none");
                 showCardSuccess();
                 payButton.classList.add("d-none");
+                sessionStorage.first_name = document.getElementById("first-name").value;
+                sessionStorage.last_name = document.getElementById("last-name").value;
+                sessionStorage.amount = "{{formatCurrency $widget.Price}}/month";
+                sessionStorage.last_four = result.paymentMethod.card.last4;
+                location.href = "/v1/receipt/bronze";
             })
             .catch(function(err) {
                 isSubmitting = false;

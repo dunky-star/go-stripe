@@ -289,3 +289,9 @@ func (app *application) BronzePlanHandler(w http.ResponseWriter, r *http.Request
 		app.errorLog.Println(err)
 	}
 }
+
+func (app *application) BronzePlanReceiptHandler(w http.ResponseWriter, r *http.Request) {
+	if err := app.renderTemplate(w, r, "receipt-plan", &templateData{}); err != nil {
+		app.errorLog.Println(err)
+	}
+}
