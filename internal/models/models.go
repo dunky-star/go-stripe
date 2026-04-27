@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"strings"
 	"time"
 )
 
@@ -288,4 +289,31 @@ func (m *DBModel) GetOrderIDByTransactionID(transactionID int) (int, error) {
 // IsNotFound reports whether a DB query returned no rows.
 func IsNotFound(err error) bool {
 	return errors.Is(err, sql.ErrNoRows)
+}
+
+// GetUserByEmail gets a user by email address.
+func (m *DBModel) GetUserByEmail(email string) (User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	email = strings.ToLower(email)
+	var u User
+
+	row := m.DB.QueryRowContext(ctx, `
+		SELECT
+			id, email, password
+		FROM
+			users
+		WHERE email = ?`, email)
+
+	err := row.Scan(
+		&u.ID,
+		&u.Email,
+		&u.Password,
+	)
+	if err != nil {
+		return u, err
+	}
+
+	return u, nil
 }

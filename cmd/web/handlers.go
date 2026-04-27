@@ -295,3 +295,10 @@ func (app *application) BronzePlanReceiptHandler(w http.ResponseWriter, r *http.
 		app.errorLog.Println(err)
 	}
 }
+
+// LoginPageHandler displays the login page template.
+func (app *application) LoginPageHandler(w http.ResponseWriter, r *http.Request) {
+	if err := app.renderTemplate(w, r, "login", &templateData{}); err != nil {
+		app.errorLog.Println(err)
+	}
+}

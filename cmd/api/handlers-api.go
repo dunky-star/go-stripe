@@ -16,8 +16,8 @@ type stripePayload struct {
 	PaymentMethod string `json:"payment_method"`
 	Email         string `json:"email"`
 	CardBrand     string `json:"card_brand"`
-	ExpiryMonth   int `json:"exp_month"`
-	ExpiryYear    int `json:"exp_year"`
+	ExpiryMonth   int    `json:"exp_month"`
+	ExpiryYear    int    `json:"exp_year"`
 	LastFour      string `json:"last_four"`
 	Plan          string `json:"plan"`
 	ProductID     string `json:"product_id"`
@@ -308,4 +308,47 @@ func (app *application) SaveTransaction(txn models.Transaction) (int, error) {
 // SaveOrder saves an order and returns id.
 func (app *application) SaveOrder(order models.Order) (int, error) {
 	return app.DB.InsertOrder(order)
+}
+
+// CreateAuthToken validates login payload and returns a success response.
+// This mirrors the source-code backend contract until full auth is wired.
+func (app *application) CreateAuthToken(w http.ResponseWriter, r *http.Request) {
+	var userInput struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	err := app.readJSON(w, r, &userInput)
+	if err != nil {
+		app.badRequest(w, r, err)
+		return
+	}
+
+	// Get the user from the database by email; send error if invalid email.
+	user, err := app.DB.GetUserByEmail(userInput.Email)
+	if err != nil {
+		app.invalidCredentials(w)
+		return
+	}
+
+	// Validate password; send error if invalid password.
+	validPassword, err := app.passwordMatches(user.Password, userInput.Password)
+	if err != nil {
+		app.invalidCredentials(w)
+		return
+	}
+	if !validPassword {
+		app.invalidCredentials(w)
+		return
+	}
+
+	// Token generation can be added here later.
+	var payload struct {
+		Error   bool   `json:"error"`
+		Message string `json:"message"`
+	}
+	payload.Error = false
+	payload.Message = "Success!"
+
+	_ = app.writeJSON(w, http.StatusOK, payload)
 }
