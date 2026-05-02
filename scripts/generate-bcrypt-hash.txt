@@ -1,0 +1,38 @@
+# Bcrypt password hash for MariaDB `users.password`
+#
+# Produces a hash compatible with golang.org/x/crypto/bcrypt (CompareHashAndPassword).
+# Run from the project root so the module can resolve golang.org/x/crypto.
+
+# Run from this repository root (the directory that contains go.mod), e.g.:
+#   cd /path/to/go-stripe
+
+# Replace YOUR_PLAINTEXT_PASSWORD with the real password (keep it inside the quotes).
+go run <(printf '%s\n' \
+'package main' \
+'' \
+'import (' \
+'  "fmt"' \
+'  "golang.org/x/crypto/bcrypt"' \
+')' \
+'' \
+'func main() {' \
+'  b, err := bcrypt.GenerateFromPassword([]byte("qwerty@1"), bcrypt.DefaultCost)' \
+'  if err != nil { panic(err) }' \
+'  fmt.Println(string(b))' \
+'}')
+
+# Copy the single line of output (starts with $2a$ or $2b$) into the INSERT below.
+
+-- ---
+
+INSERT INTO users (first_name, last_name, email, password, created_at, updated_at)
+VALUES (
+  'First',
+  'Last',
+  'you@example.com',
+  '$2a$10$PASTE_THE_HASH_FROM_THE_COMMAND_ABOVE',
+  CURRENT_TIMESTAMP,
+  CURRENT_TIMESTAMP
+);
+
+-- Login lowercases email in code; use lowercase in `email` to match what users type.
