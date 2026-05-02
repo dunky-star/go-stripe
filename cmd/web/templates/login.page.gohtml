@@ -39,10 +39,20 @@
 
 {{define "js"}}
 <script>
+const loginMessages = document.getElementById("login-messages");
+
 function showLoginError(msg) {
-    const el = document.getElementById("login-messages");
-    el.classList.remove("d-none");
-    el.innerText = msg;
+    loginMessages.classList.add("alert-danger");
+    loginMessages.classList.remove("alert-success");
+    loginMessages.classList.remove("d-none");
+    loginMessages.innerText = msg;
+}
+
+function showLoginSuccess() {
+    loginMessages.classList.remove("alert-danger");
+    loginMessages.classList.add("alert-success");
+    loginMessages.classList.remove("d-none");
+    loginMessages.innerText = "Login successful";
 }
 
 function val() {
@@ -85,6 +95,11 @@ function val() {
     })
     .then((data) => {
         console.log(data);
+        if (data.ok && data.authentication_token) {
+            localStorage.setItem("token", data.authentication_token.token);
+            localStorage.setItem("token_expiry", data.authentication_token.expiry);
+            showLoginSuccess();
+        }
     })
     .catch((err) => {
         showLoginError(err.message);
