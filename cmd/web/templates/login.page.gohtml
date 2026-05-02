@@ -48,13 +48,6 @@ function showLoginError(msg) {
     loginMessages.innerText = msg;
 }
 
-function showLoginSuccess() {
-    loginMessages.classList.remove("alert-danger");
-    loginMessages.classList.add("alert-success");
-    loginMessages.classList.remove("d-none");
-    loginMessages.innerText = "Login successful";
-}
-
 function val() {
     let form = document.getElementById("login_form");
     if (form.checkValidity() === false) {
@@ -98,15 +91,7 @@ function val() {
         if (data.ok && data.authentication_token) {
             localStorage.setItem("token", data.authentication_token.token);
             localStorage.setItem("token_expiry", data.authentication_token.expiry);
-            const loginLink = document.getElementById("login-link");
-            const vtLink = document.getElementById("vt-link");
-            if (loginLink) {
-                loginLink.innerHTML = '<a class="nav-link" onclick="logout()" href="#!">Logout</a>';
-            }
-            if (vtLink) {
-                vtLink.classList.remove("d-none");
-            }
-            showLoginSuccess();
+            window.location.replace("/");
         }
     })
     .catch((err) => {
