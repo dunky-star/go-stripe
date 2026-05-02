@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -359,15 +358,11 @@ func (app *application) CreateAuthToken(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// send response
-
 	var payload struct {
-		Error   bool          `json:"error"`
-		Message string        `json:"message"`
-		Token   *models.Token `json:"authentication_token"`
+		OK    bool          `json:"ok"`
+		Token *models.Token `json:"authentication_token,omitempty"`
 	}
-	payload.Error = false
-	payload.Message = fmt.Sprintf("token for %s created", userInput.Email)
+	payload.OK = true
 	payload.Token = token
 
 	_ = app.writeJSON(w, http.StatusOK, payload)
