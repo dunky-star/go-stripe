@@ -5,10 +5,10 @@ docker run --rm httpd:alpine htpasswd -nbBC 10 '' 'YOUR_PASSWORD' | cut -d: -f2
 
 INSERT INTO users (first_name, last_name, email, password, created_at, updated_at)
 VALUES (
-  'First',
-  'Last',
-  'you@example.com',
-  '$2a$10$PASTE_HASH',
+  'dunky',
+  'geoffrey',
+  'dunky@mail.com',
+  'YOUR_PASSWORD',
   CURRENT_TIMESTAMP,
   CURRENT_TIMESTAMP
 );
