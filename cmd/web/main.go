@@ -10,6 +10,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/alexedwards/scs/mysqlstore"
 	"github.com/alexedwards/scs/v2"
 	"github.com/dunky-star/go-stripe/internal/driver"
 	"github.com/dunky-star/go-stripe/internal/models"
@@ -91,9 +92,9 @@ func main() {
 	}
 	defer conn.Close()
 
-	// Initialize a new session manager
 	session = scs.New()
 	session.Lifetime = 24 * time.Hour
+	session.Store = mysqlstore.New(conn)
 
 	// Template caching setup
 	tc := make(map[string]*template.Template)

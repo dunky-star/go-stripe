@@ -7,8 +7,10 @@
 {{define "content"}}
 <div class="row">
 <div class="col-md-6 offset-md-3">
-    <div class="alert alert-danger text-center d-none" id="login-messages"></div>
-    <form action="" method="post"
+    {{if .Error}}
+    <div class="alert alert-danger text-center">{{.Error}}</div>
+    {{end}}
+    <form action="/login" method="post"
     name="login_form" id="login_form"
     class="d-block needs-validation login-form"
     autocomplete="off" novalidate="">
@@ -30,7 +32,7 @@
 
     <hr>
 
-    <a href="javascript:void(0)" class="btn btn-primary" id="login-button" onclick="val()">Login</a>
+    <button type="submit" class="btn btn-primary" id="login-button">Login</button>
 
 </form>
 </div>
@@ -39,64 +41,16 @@
 
 {{define "js"}}
 <script>
-const loginMessages = document.getElementById("login-messages");
-
-function showLoginError(msg) {
-    loginMessages.classList.add("alert-danger");
-    loginMessages.classList.remove("alert-success");
-    loginMessages.classList.remove("d-none");
-    loginMessages.innerText = msg;
-}
-
-function val() {
-    let form = document.getElementById("login_form");
-    if (form.checkValidity() === false) {
-        this.event.preventDefault();
-        this.event.stopPropagation();
+(function () {
+    const form = document.getElementById("login_form");
+    if (!form) return;
+    form.addEventListener("submit", function (e) {
+        if (!form.checkValidity()) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
         form.classList.add("was-validated");
-        return;
-    }
-    form.classList.add("was-validated");
-
-    let payload = {
-        email: document.getElementById("email").value,
-        password: document.getElementById("password").value,
-    };
-
-    const requestOptions = {
-        method: "post",
-        headers: {
-            "Accept": "application/json",
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload),
-    };
-
-    fetch("{{.API}}/api/v1/authenticate", requestOptions)
-    .then(async (response) => {
-        const text = await response.text();
-        let data;
-        try {
-            data = JSON.parse(text);
-        } catch (e) {
-            throw new Error("Invalid login response");
-        }
-        if (!response.ok || !data.ok) {
-            throw new Error(data.message || "Login failed");
-        }
-        return data;
-    })
-    .then((data) => {
-        console.log(data);
-        if (data.ok && data.authentication_token) {
-            localStorage.setItem("token", data.authentication_token.token);
-            localStorage.setItem("token_expiry", data.authentication_token.expiry);
-            window.location.replace("/");
-        }
-    })
-    .catch((err) => {
-        showLoginError(err.message);
     });
-}
+})();
 </script>
 {{end}}

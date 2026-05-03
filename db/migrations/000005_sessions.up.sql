@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS sessions (
+    token CHAR(64) NOT NULL PRIMARY KEY,
+    data BLOB NOT NULL,
+    expiry DATETIME(6) NOT NULL
+) ENGINE=InnoDB;
