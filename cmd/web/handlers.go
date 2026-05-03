@@ -17,7 +17,7 @@ func (app *application) HomeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) VirtualCardHandler(w http.ResponseWriter, r *http.Request) {
-	if err := app.renderTemplate(w, r, "terminal", &templateData{}, "stripe-js"); err != nil {
+	if err := app.renderTemplate(w, r, "terminal", &templateData{}); err != nil {
 		app.errorLog.Println(err)
 	}
 }
@@ -161,39 +161,6 @@ func (app *application) PaymentSucceededHandler(w http.ResponseWriter, r *http.R
 		return
 	}
 	app.infoLog.Println(orderID)
-
-	// Write this data to session, and then redirect user to a new page
-	app.Session.Put(r.Context(), "receipt", txnData)
-
-	http.Redirect(w, r, "/v1/receipt", http.StatusSeeOther)
-}
-
-func (app *application) vTerminalPaymentSucceededHandler(w http.ResponseWriter, r *http.Request) {
-
-	txnData, err := app.getTransactionData(r)
-	if err != nil {
-		app.errorLog.Println(err)
-		return
-	}
-
-	// Create a new transaction
-	txn := models.Transaction{
-		Amount:              txnData.Amount,
-		Currency:            txnData.PaymentCurrency,
-		LastFour:            txnData.LastFour,
-		ExpiryMonth:         txnData.ExpiryMonth,
-		ExpiryYear:          txnData.ExpiryMonth,
-		BankReturnCode:      txnData.BankReturnCode,
-		PaymentIntent:       txnData.PaymentIntentID,
-		PaymentMethod:       txnData.PaymentMethodID,
-		TransactionStatusID: 2,
-	}
-
-	_, err = app.SaveTransaction(txn)
-	if err != nil {
-		app.errorLog.Println(err)
-		return
-	}
 
 	// Write this data to session, and then redirect user to a new page
 	app.Session.Put(r.Context(), "receipt", txnData)

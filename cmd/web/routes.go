@@ -6,7 +6,6 @@ func (app *application) routes() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /{$}", app.HomeHandler)
 	mux.HandleFunc("GET /v1/virtual-terminal", app.VirtualCardHandler)
-	mux.HandleFunc("POST /v1/virtual-terminal-payment-succeeded", app.vTerminalPaymentSucceededHandler)
 	mux.HandleFunc("GET /v1/widget/{id}", app.ChargeOnce)
 	mux.HandleFunc("POST /v1/payment-succeeded", app.PaymentSucceededHandler)
 	mux.HandleFunc("GET /v1/receipt", app.ReceiptHandler)

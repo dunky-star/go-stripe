@@ -412,3 +412,69 @@ func (app *application) CheckAuthentication(w http.ResponseWriter, r *http.Reque
 	payload.Message = fmt.Sprintf("authenticated user %s", user.Email)
 	app.writeJSON(w, http.StatusOK, payload)
 }
+
+// VirtualTerminalPaymentSucceeded persists a virtual-terminal charge after Stripe confirms payment (JSON API).
+func (app *application) VirtualTerminalPaymentSucceeded(w http.ResponseWriter, r *http.Request) {
+	var txnData struct {
+		PaymentAmount   int    `json:"amount"`
+		PaymentCurrency string `json:"currency"`
+		FirstName       string `json:"first_name"`
+		LastName        string `json:"last_name"`
+		Email           string `json:"email"`
+		PaymentIntent   string `json:"payment_intent"`
+		PaymentMethod   string `json:"payment_method"`
+	}
+
+	err := app.readJSON(w, r, &txnData)
+	if err != nil {
+		app.badRequest(w, r, err)
+		return
+	}
+
+	card := cards.Card{
+		Secret: app.config.stripe.secret,
+		Key:    app.config.stripe.key,
+	}
+
+	pi, err := card.RetrievePaymentIntent(txnData.PaymentIntent)
+	if err != nil {
+		app.badRequest(w, r, err)
+		return
+	}
+
+	pm, err := card.GetPaymentMethod(txnData.PaymentMethod)
+	if err != nil {
+		app.badRequest(w, r, err)
+		return
+	}
+
+	bankCode := ""
+	if len(pi.Charges.Data) > 0 {
+		bankCode = pi.Charges.Data[0].ID
+	}
+
+	txn := models.Transaction{
+		Amount:              txnData.PaymentAmount,
+		Currency:            txnData.PaymentCurrency,
+		LastFour:            pm.Card.Last4,
+		ExpiryMonth:         int(pm.Card.ExpMonth),
+		ExpiryYear:          int(pm.Card.ExpYear),
+		BankReturnCode:      bankCode,
+		PaymentIntent:       txnData.PaymentIntent,
+		PaymentMethod:       txnData.PaymentMethod,
+		TransactionStatusID: 2,
+	}
+
+	_, err = app.SaveTransaction(txn)
+	if err != nil {
+		app.badRequest(w, r, err)
+		return
+	}
+
+	_ = app.writeJSON(w, http.StatusOK, txn)
+}
+
+// adminTest is a sample protected route.
+func (app *application) adminTest(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("got in"))
+}
