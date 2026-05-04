@@ -383,9 +383,24 @@ func (app *application) SendPasswordResetEmail(w http.ResponseWriter, r *http.Re
 		Link string
 	}
 
-	data.Link = "http://www.unb.ca"
+	data.Link = "https://dunkystar.com"
 
 	// send mail
+	err = app.SendMail("info@dunkystar.com", "info@dunkystar.com", "Password Reset Request", "password-reset", data)
+	if err != nil {
+		app.errorLog.Println(err)
+		app.badRequest(w, r, err)
+		return
+	}
+
+	var resp struct {
+		Error   bool   `json:"error"`
+		Message string `json:"message"`
+	}
+
+	resp.Error = false
+
+	app.writeJSON(w, http.StatusCreated, resp)
 }
 
 func (app *application) authenticateToken(r *http.Request) (*models.User, error) {
