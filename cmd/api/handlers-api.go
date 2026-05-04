@@ -11,6 +11,7 @@ import (
 
 	"github.com/dunky-star/go-stripe/internal/cards"
 	"github.com/dunky-star/go-stripe/internal/models"
+	"github.com/dunky-star/go-stripe/internal/urlsigner"
 )
 
 type stripePayload struct {
@@ -379,11 +380,31 @@ func (app *application) SendPasswordResetEmail(w http.ResponseWriter, r *http.Re
 		return
 	}
 
+	_, err = app.DB.GetUserByEmail(payload.Email)
+	if err != nil {
+		var resp struct {
+			Error   bool   `json:"error"`
+			Message string `json:"message"`
+		}
+		resp.Error = true
+		resp.Message = "No matching email found on our system"
+		app.writeJSON(w, http.StatusAccepted, resp)
+		return
+	}
+
+	link := fmt.Sprintf("%s/reset-password?email=%s", app.config.frontend, payload.Email)
+
+	sign := urlsigner.Signer{
+		Secret: []byte(app.config.secretkey),
+	}
+
+	signedLink := sign.GenerateTokenFromString(link)
+
 	var data struct {
 		Link string
 	}
 
-	data.Link = "https://dunkystar.com"
+	data.Link = signedLink
 
 	// send mail
 	err = app.SendMail("info@dunkystar.com", "info@dunkystar.com", "Password Reset Request", "password-reset", data)

@@ -33,6 +33,8 @@ type config struct {
 		username string
 		password string
 	}
+	secretkey string
+	frontend  string
 }
 
 type application struct {
@@ -70,6 +72,12 @@ func main() {
 
 	cfg.stripe.key = os.Getenv("STRIPE_KEY")
 	cfg.stripe.secret = os.Getenv("STRIPE_SECRET")
+
+	cfg.secretkey = os.Getenv("URL_SIGNING_SECRET")
+	cfg.frontend = strings.TrimSpace(os.Getenv("FRONTEND_URL"))
+	if cfg.frontend == "" {
+		cfg.frontend = "http://localhost:4000"
+	}
 
 	cfg.smtp.host = strings.TrimSpace(os.Getenv("SMTP_HOST"))
 	if p := strings.TrimSpace(os.Getenv("SMTP_PORT")); p != "" {
