@@ -20,6 +20,7 @@ var allowedMethods = []string{
 }
 
 var allowedHeaders = []string{
+	"Accept",
 	"Content-Type",
 	"Authorization",
 	"X-CSRF-Token",

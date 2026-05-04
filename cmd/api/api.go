@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/dunky-star/go-stripe/internal/driver"
@@ -24,6 +26,12 @@ type config struct {
 	stripe struct {
 		secret string
 		key    string
+	}
+	smtp struct {
+		host     string
+		port     int
+		username string
+		password string
 	}
 }
 
@@ -62,6 +70,15 @@ func main() {
 
 	cfg.stripe.key = os.Getenv("STRIPE_KEY")
 	cfg.stripe.secret = os.Getenv("STRIPE_SECRET")
+
+	cfg.smtp.host = strings.TrimSpace(os.Getenv("SMTP_HOST"))
+	if p := strings.TrimSpace(os.Getenv("SMTP_PORT")); p != "" {
+		if n, err := strconv.Atoi(p); err == nil {
+			cfg.smtp.port = n
+		}
+	}
+	cfg.smtp.username = os.Getenv("SMTP_USER")
+	cfg.smtp.password = os.Getenv("SMTP_PASSWORD")
 
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)

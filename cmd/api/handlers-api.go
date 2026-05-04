@@ -313,8 +313,6 @@ func (app *application) SaveOrder(order models.Order) (int, error) {
 	return app.DB.InsertOrder(order)
 }
 
-// CreateAuthToken validates login payload and returns a success response.
-// This mirrors the source-code backend contract until full auth is wired.
 func (app *application) CreateAuthToken(w http.ResponseWriter, r *http.Request) {
 	var userInput struct {
 		Email    string `json:"email"`
@@ -370,6 +368,26 @@ func (app *application) CreateAuthToken(w http.ResponseWriter, r *http.Request) 
 	_ = app.writeJSON(w, http.StatusOK, payload)
 }
 
+func (app *application) SendPasswordResetEmail(w http.ResponseWriter, r *http.Request) {
+	var payload struct {
+		Email string `json:"email"`
+	}
+
+	err := app.readJSON(w, r, &payload)
+	if err != nil {
+		app.badRequest(w, r, err)
+		return
+	}
+
+	var data struct {
+		Link string
+	}
+
+	data.Link = "http://www.unb.ca"
+
+	// send mail
+}
+
 func (app *application) authenticateToken(r *http.Request) (*models.User, error) {
 	authorizationHeader := r.Header.Get("Authorization")
 	if authorizationHeader == "" {
@@ -413,7 +431,6 @@ func (app *application) CheckAuthentication(w http.ResponseWriter, r *http.Reque
 	app.writeJSON(w, http.StatusOK, payload)
 }
 
-// VirtualTerminalPaymentSucceeded persists a virtual-terminal charge after Stripe confirms payment (JSON API).
 func (app *application) VirtualTerminalPaymentSucceeded(w http.ResponseWriter, r *http.Request) {
 	var txnData struct {
 		PaymentAmount   int    `json:"amount"`

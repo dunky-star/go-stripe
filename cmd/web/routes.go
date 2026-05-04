@@ -15,6 +15,7 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("GET /login", app.LoginPageHandler)
 	mux.HandleFunc("POST /login", app.PostLoginHandler)
 	mux.HandleFunc("GET /logout", app.LogoutHandler)
+	mux.HandleFunc("GET /forgot-password", app.ForgotPasswordHandler)
 	//mux.HandleFunc("GET /v1/healthcheck", app.healthcheckHandler)
 	//mux.HandleFunc("POST /v1/stripe", app.stripeHandler)
 	mux.HandleFunc("GET /plans/bronze", app.BronzePlanHandler)
