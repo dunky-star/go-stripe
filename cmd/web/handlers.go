@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/dunky-star/go-stripe/internal/cards"
+	"github.com/dunky-star/go-stripe/internal/encryption"
 	"github.com/dunky-star/go-stripe/internal/models"
 	"github.com/dunky-star/go-stripe/internal/urlsigner"
 )
@@ -308,6 +309,7 @@ func (app *application) ForgotPasswordHandler(w http.ResponseWriter, r *http.Req
 }
 
 func (app *application) ShowResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	email := r.URL.Query().Get("email")
 	theURL := r.RequestURI
 	testURL := fmt.Sprintf("%s%s", app.config.frontend, theURL)
 
@@ -328,8 +330,18 @@ func (app *application) ShowResetPasswordHandler(w http.ResponseWriter, r *http.
 		return
 	}
 
+	encyrptor := encryption.Encryption{
+		Key: []byte(app.config.secretKey),
+	}
+
+	encryptedEmail, err := encyrptor.Encrypt(email)
+	if err != nil {
+		app.errorLog.Println("Encryption failed")
+		return
+	}
+
 	data := make(map[string]interface{})
-	data["email"] = r.URL.Query().Get("email")
+	data["email"] = encryptedEmail
 
 	if err := app.renderTemplate(w, r, "reset-password", &templateData{
 		Data: data,

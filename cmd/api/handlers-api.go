@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/dunky-star/go-stripe/internal/cards"
+	"github.com/dunky-star/go-stripe/internal/encryption"
 	"github.com/dunky-star/go-stripe/internal/models"
 	"github.com/dunky-star/go-stripe/internal/urlsigner"
 	"golang.org/x/crypto/bcrypt"
@@ -439,7 +440,17 @@ func (app *application) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := app.DB.GetUserByEmail(payload.Email)
+	encyrptor := encryption.Encryption{
+		Key: []byte(app.config.secretkey),
+	}
+
+	realEmail, err := encyrptor.Decrypt(payload.Email)
+	if err != nil {
+		app.badRequest(w, r, err)
+		return
+	}
+
+	user, err := app.DB.GetUserByEmail(realEmail)
 	if err != nil {
 		app.badRequest(w, r, err)
 		return

@@ -12,6 +12,7 @@ type Encryption struct {
 	Key []byte
 }
 
+// Encrypt seals plaintext with AES-GCM (authenticated). Output is base64url(nonce || ciphertext).
 func (e *Encryption) Encrypt(text string) (string, error) {
 	plaintext := []byte(text)
 
@@ -30,12 +31,13 @@ func (e *Encryption) Encrypt(text string) (string, error) {
 		return "", err
 	}
 
-	cipherText := aead.Seal(nonce, nonce, plaintext, nil)
-	return base64.URLEncoding.EncodeToString(cipherText), nil
+	out := aead.Seal(nonce, nonce, plaintext, nil)
+	return base64.URLEncoding.EncodeToString(out), nil
 }
 
-func (e *Encryption) Decrpyt(cryptoText string) (string, error) {
-	cipherText, err := base64.URLEncoding.DecodeString(cryptoText)
+// Decrypt reverses Encrypt: base64url decode, then GCM open.
+func (e *Encryption) Decrypt(cryptoText string) (string, error) {
+	raw, err := base64.URLEncoding.DecodeString(cryptoText)
 	if err != nil {
 		return "", err
 	}
@@ -50,16 +52,16 @@ func (e *Encryption) Decrpyt(cryptoText string) (string, error) {
 		return "", err
 	}
 
-	nonceSize := aead.NonceSize()
-	if len(cipherText) < nonceSize {
+	ns := aead.NonceSize()
+	if len(raw) < ns {
 		return "", err
 	}
 
-	nonce, payload := cipherText[:nonceSize], cipherText[nonceSize:]
-	plainText, err := aead.Open(nil, nonce, payload, nil)
+	nonce, payload := raw[:ns], raw[ns:]
+	plain, err := aead.Open(nil, nonce, payload, nil)
 	if err != nil {
 		return "", err
 	}
 
-	return string(plainText), nil
+	return string(plain), nil
 }

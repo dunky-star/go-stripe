@@ -1,3 +1,5 @@
+python3 -c "import secrets,string; a=string.ascii_letters+string.digits; print(''.join(secrets.choice(a) for _ in range(32)))"
+
 mkpasswd -m bcrypt -R 10 'YOUR_PASSWORD'
 
 docker run --rm -e DEBIAN_FRONTEND=noninteractive -e PW='YOUR_PASSWORD' debian:bookworm-slim sh -c 'apt-get update -qq && apt-get install -y -qq whois >/dev/null && mkpasswd -m bcrypt -R 10 "$PW"'
