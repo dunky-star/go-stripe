@@ -1,14 +1,13 @@
-htpasswd -nbBC 10 "" 'YOUR_PASSWORD'
-docker run --rm httpd:alpine htpasswd -nbBC 10 '' 'YOUR_PASSWORD' | cut -d: -f2
-# python3 -c "import bcrypt; print(bcrypt.hashpw(b'YOUR_PASSWORD', bcrypt.gensalt(10)).decode())"
-# mkpasswd -m bcrypt -R 10 YOUR_PASSWORD
+mkpasswd -m bcrypt -R 10 'YOUR_PASSWORD'
+
+docker run --rm -e DEBIAN_FRONTEND=noninteractive -e PW='YOUR_PASSWORD' debian:bookworm-slim sh -c 'apt-get update -qq && apt-get install -y -qq whois >/dev/null && mkpasswd -m bcrypt -R 10 "$PW"'
 
 INSERT INTO users (first_name, last_name, email, password, created_at, updated_at)
 VALUES (
   'dunky',
   'geoffrey',
   'dunky@mail.com',
-  'YOUR_PASSWORD',
+  '<paste bcrypt hash here>',
   CURRENT_TIMESTAMP,
   CURRENT_TIMESTAMP
 );

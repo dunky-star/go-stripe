@@ -298,7 +298,7 @@ func (m *DBModel) GetUserByEmail(email string) (User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	email = strings.ToLower(email)
+	email = strings.ToLower(strings.TrimSpace(email))
 	var u User
 
 	row := m.DB.QueryRowContext(ctx, `
@@ -307,6 +307,33 @@ func (m *DBModel) GetUserByEmail(email string) (User, error) {
 		FROM
 			users
 		WHERE email = ?`, email)
+
+	err := row.Scan(
+		&u.ID,
+		&u.FirstName,
+		&u.LastName,
+		&u.Email,
+		&u.Password,
+	)
+	if err != nil {
+		return u, err
+	}
+
+	return u, nil
+}
+
+// GetUserByID loads a user row by primary key (used after Authenticate).
+func (m *DBModel) GetUserByID(id int) (User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var u User
+	row := m.DB.QueryRowContext(ctx, `
+		SELECT
+			id, first_name, last_name, email, password
+		FROM
+			users
+		WHERE id = ?`, id)
 
 	err := row.Scan(
 		&u.ID,

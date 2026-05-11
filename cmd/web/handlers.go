@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/dunky-star/go-stripe/internal/cards"
 	"github.com/dunky-star/go-stripe/internal/models"
+	"github.com/dunky-star/go-stripe/internal/urlsigner"
 )
 
 func (app *application) HomeHandler(w http.ResponseWriter, r *http.Request) {
@@ -301,14 +301,16 @@ func (app *application) PostLoginHandler(w http.ResponseWriter, r *http.Request)
 	email := r.Form.Get("email")
 	password := r.Form.Get("password")
 
-	_, err := app.DB.Authenticate(email, password)
+	userID, err := app.DB.Authenticate(email, password)
 	if err != nil {
+		app.errorLog.Printf("login Authenticate: %v", err)
 		http.Redirect(w, r, "/login?error=credentials", http.StatusSeeOther)
 		return
 	}
 
-	user, err := app.DB.GetUserByEmail(strings.ToLower(strings.TrimSpace(email)))
+	user, err := app.DB.GetUserByID(userID)
 	if err != nil {
+		app.errorLog.Printf("login GetUserByID(%d): %v", userID, err)
 		http.Redirect(w, r, "/login?error=credentials", http.StatusSeeOther)
 		return
 	}
@@ -341,5 +343,30 @@ func (app *application) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 func (app *application) ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	if err := app.renderTemplate(w, r, "forgot-password", &templateData{}); err != nil {
 		app.errorLog.Println(err)
+	}
+}
+
+func (app *application) ShowResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	theURL := r.RequestURI
+	testURL := fmt.Sprintf("%s%s", app.config.frontend, theURL)
+
+	signer := urlsigner.Signer{
+		Secret: []byte(app.config.secretKey),
+	}
+
+	valid := signer.VerifyToken(testURL)
+
+	if !valid {
+		app.errorLog.Println("Invalid url - tampering detected")
+		return
+	}
+
+	data := make(map[string]interface{})
+	data["email"] = r.URL.Query().Get("email")
+
+	if err := app.renderTemplate(w, r, "reset-password", &templateData{
+		Data: data,
+	}); err != nil {
+		app.errorLog.Print(err)
 	}
 }

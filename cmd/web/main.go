@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/alexedwards/scs/mysqlstore"
@@ -35,6 +36,8 @@ type config struct {
 		secret string
 		key    string
 	}
+	secretKey string
+	frontend  string
 }
 
 type application struct {
@@ -80,6 +83,12 @@ func main() {
 	// Read sensitive config from environment variables
 	cfg.stripe.secret = os.Getenv("STRIPE_SECRET")
 	cfg.stripe.key = os.Getenv("STRIPE_KEY")
+
+	cfg.secretKey = os.Getenv("URL_SIGNING_SECRET")
+	cfg.frontend = strings.TrimSpace(os.Getenv("FRONTEND_URL"))
+	if cfg.frontend == "" {
+		cfg.frontend = "http://localhost:4000"
+	}
 
 	// Logging setup
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
