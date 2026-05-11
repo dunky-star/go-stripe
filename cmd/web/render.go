@@ -18,7 +18,6 @@ type templateData struct {
 	Warning           string
 	Error             string
 	IsAuthenticated   bool
-	APIToken          string
 	API               string
 	CSSVersion        string
 	StripeKey         string

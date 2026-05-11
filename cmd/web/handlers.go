@@ -18,13 +18,7 @@ func (app *application) HomeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) VirtualCardHandler(w http.ResponseWriter, r *http.Request) {
-	td := &templateData{}
-	if app.Session.Exists(r.Context(), "apiToken") {
-		if tok, ok := app.Session.Get(r.Context(), "apiToken").(string); ok {
-			td.APIToken = tok
-		}
-	}
-	if err := app.renderTemplate(w, r, "terminal", td); err != nil {
+	if err := app.renderTemplate(w, r, "terminal", &templateData{}); err != nil {
 		app.errorLog.Println(err)
 	}
 }
@@ -272,64 +266,31 @@ func (app *application) BronzePlanReceiptHandler(w http.ResponseWriter, r *http.
 
 // LoginPageHandler displays the login page template.
 func (app *application) LoginPageHandler(w http.ResponseWriter, r *http.Request) {
-	if app.Session.Exists(r.Context(), "userID") {
-		http.Redirect(w, r, "/", http.StatusSeeOther)
-		return
-	}
-	td := &templateData{}
-	switch r.URL.Query().Get("error") {
-	case "credentials":
-		td.Error = "Invalid email or password."
-	case "server":
-		td.Error = "Could not complete sign-in. Please try again."
-	}
-	if err := app.renderTemplate(w, r, "login", td); err != nil {
-		app.errorLog.Println(err)
+	if err := app.renderTemplate(w, r, "login", &templateData{}); err != nil {
+		app.errorLog.Print(err)
 	}
 }
 
-// PostLoginHandler validates credentials, issues DB token, and saves the session.
+// PostLoginHandler validates credentials and saves the session.
 func (app *application) PostLoginHandler(w http.ResponseWriter, r *http.Request) {
 	app.Session.RenewToken(r.Context())
 
-	if err := r.ParseForm(); err != nil {
+	err := r.ParseForm()
+	if err != nil {
 		app.errorLog.Println(err)
-		http.Redirect(w, r, "/login?error=server", http.StatusSeeOther)
 		return
 	}
 
 	email := r.Form.Get("email")
 	password := r.Form.Get("password")
 
-	userID, err := app.DB.Authenticate(email, password)
+	id, err := app.DB.Authenticate(email, password)
 	if err != nil {
-		app.errorLog.Printf("login Authenticate: %v", err)
-		http.Redirect(w, r, "/login?error=credentials", http.StatusSeeOther)
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 
-	user, err := app.DB.GetUserByID(userID)
-	if err != nil {
-		app.errorLog.Printf("login GetUserByID(%d): %v", userID, err)
-		http.Redirect(w, r, "/login?error=credentials", http.StatusSeeOther)
-		return
-	}
-
-	token, err := models.GenerateToken(user.ID, 24*time.Hour, models.ScopeAuthentication)
-	if err != nil {
-		app.errorLog.Println(err)
-		http.Redirect(w, r, "/login?error=server", http.StatusSeeOther)
-		return
-	}
-
-	if err := app.DB.InsertToken(token, user); err != nil {
-		app.errorLog.Println(err)
-		http.Redirect(w, r, "/login?error=server", http.StatusSeeOther)
-		return
-	}
-
-	app.Session.Put(r.Context(), "userID", user.ID)
-	app.Session.Put(r.Context(), "apiToken", token.PlainText)
+	app.Session.Put(r.Context(), "userID", id)
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 

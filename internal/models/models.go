@@ -298,7 +298,7 @@ func (m *DBModel) GetUserByEmail(email string) (User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	email = strings.ToLower(strings.TrimSpace(email))
+	email = strings.ToLower(email)
 	var u User
 
 	row := m.DB.QueryRowContext(ctx, `
@@ -354,21 +354,19 @@ func (m *DBModel) Authenticate(email, password string) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	email = strings.ToLower(strings.TrimSpace(email))
 	var id int
 	var hashedPassword string
 
 	row := m.DB.QueryRowContext(ctx, `SELECT id, password FROM users WHERE email = ?`, email)
 	err := row.Scan(&id, &hashedPassword)
 	if err != nil {
-		return 0, err
+		return id, err
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
-	if err != nil {
-		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
-			return 0, errors.New("incorrect password")
-		}
+	if err == bcrypt.ErrMismatchedHashAndPassword {
+		return 0, errors.New("incorrect password")
+	} else if err != nil {
 		return 0, err
 	}
 

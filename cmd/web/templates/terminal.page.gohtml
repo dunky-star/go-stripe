@@ -191,14 +191,14 @@ document.getElementById("charge_amount").addEventListener("change", function(evt
             payment_method: result.paymentIntent.payment_method,
         };
 
-        const apiBearer = "{{.APIToken}}";
+        let token = localStorage.getItem("token");
 
         const requestOptions = {
             method: "post",
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + apiBearer,
+                'Authorization': 'Bearer ' + token,
             },
             body: JSON.stringify(payload),
         };
