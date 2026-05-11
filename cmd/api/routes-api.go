@@ -10,7 +10,8 @@ func (app *application) routes() http.Handler {
 	mux.HandleFunc("POST /api/v1/create-customer-and-subscribe-to-plan", app.CreateCustomerAndSubscribeToPlan)
 	mux.HandleFunc("POST /api/v1/authenticate", app.CreateAuthToken)
 	mux.HandleFunc("POST /api/v1/is-authenticated", app.CheckAuthentication)
-	mux.HandleFunc("POST /api/forgot-password", app.SendPasswordResetEmail)
+	mux.HandleFunc("POST /api/v1/forgot-password", app.SendPasswordResetEmail)
+	mux.HandleFunc("POST /api/v1/reset-password", app.ResetPassword)
 
 	admin := http.NewServeMux()
 	admin.HandleFunc("GET /test", app.adminTest)
