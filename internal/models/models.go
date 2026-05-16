@@ -397,7 +397,7 @@ func (m *DBModel) GetAllOrders() ([]*Order, error) {
 	query := `
 	select
 		o.id, o.widget_id, o.transaction_id, o.customer_id, 
-		o.status_id, o.quantity, o.amount, o.created_at,
+		o.transaction_status_id, o.quantity, o.amount, o.created_at,
 		o.updated_at, w.id, w.name, t.id, t.amount, t.currency,
 		t.last_four, t.expiry_month, t.expiry_year, t.payment_intent,
 		t.bank_return_code, c.id, c.first_name, c.last_name, c.email
