@@ -581,6 +581,16 @@ func (app *application) VirtualTerminalPaymentSucceeded(w http.ResponseWriter, r
 	_ = app.writeJSON(w, http.StatusOK, txn)
 }
 
+func (app *application) AllSales(w http.ResponseWriter, r *http.Request) {
+	allSales, err := app.DB.GetAllOrders()
+	if err != nil {
+		app.badRequest(w, r, err)
+		return
+	}
+
+	app.writeJSON(w, http.StatusOK, allSales)
+}
+
 // adminTest is a sample protected route.
 func (app *application) adminTest(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("got in"))
