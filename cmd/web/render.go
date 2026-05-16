@@ -17,10 +17,11 @@ type templateData struct {
 	Flash             string
 	Warning           string
 	Error             string
-	IsAuthenticated   bool
-	API               string
-	CSSVersion        string
-	StripeKey         string
+	IsAuthenticated      int
+	API                  string
+	CSSVersion           string
+	StripeKey            string
+	StripePublishableKey string
 }
 
 var functions = template.FuncMap{
@@ -38,7 +39,14 @@ var templateFS embed.FS
 func (app *application) addDefaultData(td *templateData, r *http.Request) *templateData {
 	td.API = app.config.api
 	td.StripeKey = app.config.stripe.key
-	td.IsAuthenticated = app.Session.Exists(r.Context(), "userID")
+	td.StripePublishableKey = app.config.stripe.key
+
+	if app.Session.Exists(r.Context(), "userID") {
+		td.IsAuthenticated = 1
+	} else {
+		td.IsAuthenticated = 0
+	}
+
 	return td
 }
 

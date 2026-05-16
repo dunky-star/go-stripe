@@ -11,11 +11,10 @@
         <hr>
         <div class="alert alert-danger text-center d-none" id="card-messages"></div>
 
-        <form action="#" method="post"
+        <form action="" method="post"
             name="charge_form" id="charge_form"
             class="d-block needs-validation charge-form"
-            autocomplete="off" novalidate=""
-            onsubmit="return false;">
+            autocomplete="off" novalidate="">
 
             <div class="mb-3">
                 <label for="charge_amount" class="form-label">Amount</label>
@@ -31,7 +30,7 @@
 
             <div class="mb-3">
                 <label for="cardholder-email" class="form-label">Cardholder Email</label>
-                <input type="email" class="form-control" id="cardholder-email" name="cardholder_email"
+                <input type="email" class="form-control" id="cardholder-email" name="email"
                     required="" autocomplete="cardholder-email-new">
             </div>
 
@@ -39,6 +38,7 @@
                 <label for="card-element" class="form-label">Credit Card</label>
                 <div id="card-element" class="form-control"></div>
                 <div class="alert-danger text-center" id="card-errors" role="alert"></div>
+                <div class="alert-success text-center" id="card-success" role="alert"></div>
             </div>
 
             <hr>
@@ -50,7 +50,11 @@
                 </div>
             </div>
 
-            <input type="hidden" id="amount" value="0">
+            <input type="hidden" name="amount" id="amount">
+            <input type="hidden" name="payment_intent" id="payment_intent">
+            <input type="hidden" name="payment_method" id="payment_method">
+            <input type="hidden" name="payment_amount" id="payment_amount">
+            <input type="hidden" name="payment_currency" id="payment_currency">
 
         </form>
     </div>
@@ -64,7 +68,7 @@
             <strong>Bank Return Code</strong>: <span id="bank-return-code"></span>
         </p>
         <p>
-            <a class="btn btn-primary" href="/v1/virtual-terminal">
+            <a class="btn btn-primary" href="/v1/admin/virtual-terminal">
                 Charge another card
             </a>
         </p>
@@ -76,14 +80,16 @@
 
 {{define "js"}}
 <script>
+checkAuth();
 document.getElementById("charge_amount").addEventListener("change", function(evt){
     if (evt.target.value !== "") {
         document.getElementById("amount").value = parseInt((evt.target.value * 100), 10);
     } else {
         document.getElementById("amount").value = 0;
     }
-});
+})
 </script>
+
 
 <script src="https://js.stripe.com/v3/"></script>
 
@@ -94,7 +100,7 @@ document.getElementById("charge_amount").addEventListener("change", function(evt
     const payButton = document.getElementById("pay-button");
     const processing = document.getElementById("processing-payment");
 
-    stripe = Stripe('{{.StripeKey}}');
+    stripe = Stripe({{.StripePublishableKey}});
 
     function hidePayButton() {
         payButton.classList.add("d-none");
@@ -132,11 +138,11 @@ document.getElementById("charge_amount").addEventListener("change", function(evt
         hidePayButton();
 
         let amountToCharge = document.getElementById("amount").value;
-
+        
         let payload = {
-            amount: String(amountToCharge),
-            currency: 'usd',
-        };
+            amount: amountToCharge,
+            currency: 'cad',
+        }
 
         const requestOptions = {
             method: 'post',
@@ -145,7 +151,7 @@ document.getElementById("charge_amount").addEventListener("change", function(evt
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(payload),
-        };
+        }
 
         fetch("{{.API}}/api/v1/payment-intent", requestOptions)
             .then(response => response.text())
@@ -162,12 +168,15 @@ document.getElementById("charge_amount").addEventListener("change", function(evt
                         }
                     }).then(function(result) {
                         if (result.error) {
+                            // card declined, or something went wrong with the card
                             showCardError(result.error.message);
                             showPayButtons();
                         } else if(result.paymentIntent) {
                             if (result.paymentIntent.status === "succeeded") {
+                                // we have charged the card
                                 processing.classList.add("d-none");
                                 showCardSuccess();
+                                {{/* document.getElementById("charge_form").submit(); */}}
                                 saveTransaction(result);
                             }
                         }
@@ -189,7 +198,7 @@ document.getElementById("charge_amount").addEventListener("change", function(evt
             email: document.getElementById("cardholder-email").value,
             payment_intent: result.paymentIntent.id,
             payment_method: result.paymentIntent.payment_method,
-        };
+        }
 
         let token = localStorage.getItem("token");
 
@@ -201,7 +210,7 @@ document.getElementById("charge_amount").addEventListener("change", function(evt
                 'Authorization': 'Bearer ' + token,
             },
             body: JSON.stringify(payload),
-        };
+        }
 
         fetch("{{.API}}/api/v1/admin/virtual-terminal-succeeded", requestOptions)
         .then(response => response.json())
@@ -212,14 +221,10 @@ document.getElementById("charge_amount").addEventListener("change", function(evt
             document.getElementById("bank-return-code").innerHTML = data.bank_return_code;
             document.getElementById("receipt").classList.remove("d-none");
         })
-        .catch(function(err) {
-            console.log(err);
-            showCardError("Could not save transaction.");
-            showPayButtons();
-        });
     }
 
     (function() {
+        // create stripe & elements
         const elements = stripe.elements();
         const style = {
             base: {
@@ -228,12 +233,14 @@ document.getElementById("charge_amount").addEventListener("change", function(evt
             }
         };
 
+        // create card entry
         card = elements.create('card', {
             style: style,
             hidePostalCode: true,
         });
         card.mount("#card-element");
 
+        // check for input errors
         card.addEventListener('change', function(event) {
             var displayError = document.getElementById("card-errors");
             if (event.error) {
