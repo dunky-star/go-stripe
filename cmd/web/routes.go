@@ -10,8 +10,10 @@ func (app *application) routes() http.Handler {
 	admin.HandleFunc("GET /virtual-terminal", app.VirtualCardHandler)
 	admin.HandleFunc("GET /all-sales", app.AllSales)
 	admin.HandleFunc("GET /all-subscriptions", app.AllSubscriptions)
+	admin.HandleFunc("GET /sales/{id}", app.ShowSale)
+	admin.HandleFunc("GET /subscriptions/{id}", app.ShowSubscription)
 	mux.Handle("/v1/admin/", app.Auth(http.StripPrefix("/v1/admin", admin)))
-	
+
 	mux.HandleFunc("GET /v1/widget/{id}", app.ChargeOnce)
 	mux.HandleFunc("POST /v1/payment-succeeded", app.PaymentSucceededHandler)
 	mux.HandleFunc("GET /v1/receipt", app.ReceiptHandler)

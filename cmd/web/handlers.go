@@ -361,3 +361,27 @@ func (app *application) AllSubscriptions(w http.ResponseWriter, r *http.Request)
 		app.errorLog.Print(err)
 	}
 }
+
+// ShowSale shows one sale page
+func (app *application) ShowSale(w http.ResponseWriter, r *http.Request) {
+	stringMap := make(map[string]string)
+	stringMap["title"] = "Sale"
+	stringMap["cancel"] = "/v1/admin/all-sales"
+	if err := app.renderTemplate(w, r, "sale", &templateData{
+		StringMap: stringMap,
+	}); err != nil {
+		app.errorLog.Print(err)
+	}
+}
+
+// ShowSubscription shows one subscription page
+func (app *application) ShowSubscription(w http.ResponseWriter, r *http.Request) {
+	stringMap := make(map[string]string)
+	stringMap["title"] = "Subscription"
+	stringMap["cancel"] = "/v1/admin/all-subscriptions"
+	if err := app.renderTemplate(w, r, "sale", &templateData{
+		StringMap: stringMap,
+	}); err != nil {
+		app.errorLog.Print(err)
+	}
+}
