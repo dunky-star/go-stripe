@@ -17,6 +17,7 @@ func (app *application) routes() http.Handler {
 	admin.HandleFunc("GET /test", app.adminTest)
 	admin.HandleFunc("POST /virtual-terminal-succeeded", app.VirtualTerminalPaymentSucceeded)
 	admin.HandleFunc("POST /all-sales", app.AllSales)
+	admin.HandleFunc("POST /all-subscriptions", app.AllSubscriptions)
 
 	mux.Handle("/api/v1/admin/", app.Auth(http.StripPrefix("/api/v1/admin", admin)))
 
