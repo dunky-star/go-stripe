@@ -200,6 +200,28 @@ func SafeClientMessage(err error) string {
 	return "We couldn’t complete payment. Please try again or use a different card."
 }
 
+// SafeRefundMessage returns text safe to show when a refund fails. Log the full err on the server.
+func SafeRefundMessage(err error) string {
+	if err == nil {
+		return ""
+	}
+	se, ok := err.(*stripe.Error)
+	if !ok {
+		return "We couldn't process the refund. Please try again."
+	}
+	switch se.Code {
+	case stripe.ErrorCodeResourceMissing:
+		return "This payment could not be found in Stripe. The refund was not processed."
+	case stripe.ErrorCodeChargeAlreadyRefunded:
+		return "This charge has already been refunded."
+	}
+	switch se.HTTPStatusCode {
+	case 401, 403:
+		return "Refund could not be verified. Please try again later."
+	}
+	return "We couldn't process the refund. Please try again."
+}
+
 func isPaymentMethodAlreadyAttached(err error) bool {
 	se, ok := err.(*stripe.Error)
 	if !ok {
