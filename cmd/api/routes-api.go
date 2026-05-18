@@ -19,6 +19,7 @@ func (app *application) routes() http.Handler {
 	admin.HandleFunc("POST /all-sales", app.AllSales)
 	admin.HandleFunc("POST /all-subscriptions", app.AllSubscriptions)
 	admin.HandleFunc("POST /get-sale/{id}", app.GetSale)
+	admin.HandleFunc("POST /refund", app.RefundCharge)
 
 	mux.Handle("/api/v1/admin/", app.Auth(http.StripPrefix("/api/v1/admin", admin)))
 

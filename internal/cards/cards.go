@@ -8,6 +8,7 @@ import (
 	"github.com/stripe/stripe-go/v72/customer"
 	"github.com/stripe/stripe-go/v72/paymentintent"
 	"github.com/stripe/stripe-go/v72/paymentmethod"
+	"github.com/stripe/stripe-go/v72/refund"
 	"github.com/stripe/stripe-go/v72/sub"
 )
 
@@ -205,6 +206,24 @@ func isPaymentMethodAlreadyAttached(err error) bool {
 		return false
 	}
 	return strings.Contains(strings.ToLower(se.Msg), "already been attached to a customer")
+}
+
+// Refund refunds an amount for a paymentIntent
+func (c *Card) Refund(pi string, amount int) error {
+	stripe.Key = c.Secret
+	amountToRefund := int64(amount)
+
+	refundParams := &stripe.RefundParams{
+		Amount:        &amountToRefund,
+		PaymentIntent: &pi,
+	}
+
+	_, err := refund.New(refundParams)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (c *Card) findCustomerByEmail(email string) (*stripe.Customer, error) {
