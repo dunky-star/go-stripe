@@ -200,6 +200,33 @@ func SafeClientMessage(err error) string {
 	return "We couldn’t complete payment. Please try again or use a different card."
 }
 
+// SafeCancelSubscriptionMessage returns text safe to show when cancel fails. Log the full err on the server.
+func SafeCancelSubscriptionMessage(err error) string {
+	if err == nil {
+		return ""
+	}
+	se, ok := err.(*stripe.Error)
+	if !ok {
+		return "We couldn't cancel the subscription. Please try again."
+	}
+	msg := strings.ToLower(se.Msg)
+	if strings.Contains(msg, "incomplete_expired") {
+		return "This subscription has expired in Stripe and cannot be cancelled."
+	}
+	if strings.Contains(msg, "canceled") || strings.Contains(msg, "cancelled") {
+		return "This subscription is already cancelled in Stripe."
+	}
+	switch se.Code {
+	case stripe.ErrorCodeResourceMissing:
+		return "This subscription could not be found in Stripe."
+	}
+	switch se.HTTPStatusCode {
+	case 401, 403:
+		return "Cancellation could not be verified. Please try again later."
+	}
+	return "We couldn't cancel the subscription. Please try again."
+}
+
 // SafeRefundMessage returns text safe to show when a refund fails. Log the full err on the server.
 func SafeRefundMessage(err error) string {
 	if err == nil {
@@ -228,6 +255,21 @@ func isPaymentMethodAlreadyAttached(err error) bool {
 		return false
 	}
 	return strings.Contains(strings.ToLower(se.Msg), "already been attached to a customer")
+}
+
+// CancelSubscription cancels a subscription, by subscription id
+func (c *Card) CancelSubscription(subID string) error {
+	stripe.Key = c.Secret
+
+	params := &stripe.SubscriptionParams{
+		CancelAtPeriodEnd: stripe.Bool(true),
+	}
+
+	_, err := sub.Update(subID, params)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Refund refunds an amount for a paymentIntent
