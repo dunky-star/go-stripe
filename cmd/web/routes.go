@@ -12,6 +12,8 @@ func (app *application) routes() http.Handler {
 	admin.HandleFunc("GET /all-subscriptions", app.AllSubscriptions)
 	admin.HandleFunc("GET /sales/{id}", app.ShowSale)
 	admin.HandleFunc("GET /subscriptions/{id}", app.ShowSubscription)
+	admin.HandleFunc("GET /all-users", app.AllUsers)
+	admin.HandleFunc("GET /all-users/{id}", app.OneUser)
 	mux.Handle("/v1/admin/", app.Auth(http.StripPrefix("/v1/admin", admin)))
 
 	mux.HandleFunc("GET /v1/widget/{id}", app.ChargeOnce)
