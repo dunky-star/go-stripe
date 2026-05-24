@@ -24,6 +24,7 @@ func (app *application) routes() http.Handler {
 	admin.HandleFunc("POST /all-users", app.AllUsers)
 	admin.HandleFunc("POST /all-users/{id}", app.OneUser)
 	admin.HandleFunc("POST /all-users/edit/{id}", app.EditUser)
+	admin.HandleFunc("POST /all-users/delete/{id}", app.DeleteUser)
 
 	mux.Handle("/api/v1/admin/", app.Auth(http.StripPrefix("/api/v1/admin", admin)))
 

@@ -831,6 +831,26 @@ func (app *application) EditUser(w http.ResponseWriter, r *http.Request) {
 	app.writeJSON(w, http.StatusOK, resp)
 }
 
+// DeleteUser deletes a user, and all associated tokens, from the database
+func (app *application) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	userID, _ := strconv.Atoi(id)
+
+	err := app.DB.DeleteUser(userID)
+	if err != nil {
+		app.badRequest(w, r, err)
+		return
+	}
+
+	var resp struct {
+		Error   bool   `json:"error"`
+		Message string `json:"message"`
+	}
+
+	resp.Error = false
+	app.writeJSON(w, http.StatusOK, resp)
+}
+
 // adminTest is a sample protected route.
 func (app *application) adminTest(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("got in"))
