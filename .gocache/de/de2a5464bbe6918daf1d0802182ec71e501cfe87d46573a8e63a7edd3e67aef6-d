@@ -1,4 +1,0 @@
-./dkim.go
-./dkimHeader.go
-./errors.go
-./pubKeyRep.go

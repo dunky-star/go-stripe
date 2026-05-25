@@ -1,6 +1,0 @@
-./api.go
-./handlers-api.go
-./helpers.go
-./mailer.go
-./middleware.go
-./routes-api.go

@@ -1,7 +1,0 @@
-./attach.go
-./attach_old.go
-./auth.go
-./email.go
-./header.go
-./message.go
-./smtp.go
