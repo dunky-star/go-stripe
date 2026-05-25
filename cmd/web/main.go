@@ -119,6 +119,9 @@ func main() {
 		DB:            models.DBModel{DB: conn},
 		Session:       session,
 	}
+
+	go app.ListenToWsChannel()
+
 	// Call the serve() method on our application struct.
 	err = app.serve()
 	if err != nil {

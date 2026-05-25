@@ -5,6 +5,7 @@ import "net/http"
 func (app *application) routes() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /{$}", app.HomeHandler)
+	mux.HandleFunc("GET /ws", app.WsEndPoint)
 
 	admin := http.NewServeMux()
 	admin.HandleFunc("GET /virtual-terminal", app.VirtualCardHandler)
