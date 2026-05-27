@@ -77,6 +77,8 @@ func main() {
 		version:  version,
 	}
 
+	app.CreateDirIfNotExist("./invoices")
+
 	// Call the serve() method on our application struct.
 	err := app.serve()
 	if err != nil {
