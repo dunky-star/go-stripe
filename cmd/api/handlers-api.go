@@ -13,6 +13,7 @@ import (
 	"github.com/dunky-star/go-stripe/internal/encryption"
 	"github.com/dunky-star/go-stripe/internal/models"
 	"github.com/dunky-star/go-stripe/internal/urlsigner"
+	"github.com/dunky-star/go-stripe/internal/validator"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -128,6 +129,16 @@ func (app *application) CreateCustomerAndSubscribeToPlan(w http.ResponseWriter, 
 		})
 		return
 	}
+
+	// validate data
+	v := validator.New()
+	v.Check(len(data.FirstName) > 1, "first_name", "must be at least 2 characters")
+
+	if !v.Valid() {
+		app.failedValidation(w, r, v.Errors)
+		return
+	}
+
 	app.infoLog.Println(data.Email, data.LastFour, data.PaymentMethod, data.Plan)
 
 	card := cards.Card{
